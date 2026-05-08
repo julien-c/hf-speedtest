@@ -1,5 +1,5 @@
 """
-Minimal re-interpretation of LibreSpeed's dlTest in Python + httpx.
+Minimal re-interpretation of LibreSpeed's dlTest to Python + httpx.
 
 Runs N parallel HTTP streams against a large file, counts bytes received,
 applies a grace period, and reports speed in Mbit/s. Auto-shortens on
@@ -47,6 +47,7 @@ async def stream_loop(client: httpx.AsyncClient, state: State, idx: int, delay: 
         except (httpx.HTTPError, asyncio.CancelledError):
             if state.stop:
                 return
+            # restart this stream (mirrors xhr_ignoreErrors == 1)
             await asyncio.sleep(0.1)
 
 
@@ -59,17 +60,18 @@ async def ticker(state: State) -> None:
         if not state.grace_done:
             if t > GRACE_SECONDS:
                 if state.tot_loaded > 0:
+                    # restart measurement once the pipe is warm
                     state.start_t = time.monotonic()
                     state.bonus_t = 0.0
                     state.tot_loaded = 0
                 state.grace_done = True
             continue
 
-        speed_bps = state.tot_loaded / t
-        mbps = speed_bps * 8 * OVERHEAD / 1_000_000
+        speed_bps = state.tot_loaded / t                    # bytes/sec
+        mbps = speed_bps * 8 * OVERHEAD / 1_000_000         # Mbit/s
 
         if TIME_AUTO:
-            bonus = (5.0 * speed_bps) / 100_000 / 1000.0
+            bonus = (5.0 * speed_bps) / 100_000 / 1000.0    # → seconds
             state.bonus_t += min(bonus, 0.4)
 
         progress = (t + state.bonus_t) / MAX_SECONDS
@@ -85,7 +87,7 @@ async def ticker(state: State) -> None:
             return
 
 
-async def _run() -> None:
+async def main() -> None:
     state = State()
     limits = httpx.Limits(max_connections=NUM_STREAMS * 2, max_keepalive_connections=NUM_STREAMS)
     async with httpx.AsyncClient(limits=limits, http2=False, follow_redirects=True) as client:
@@ -100,9 +102,5 @@ async def _run() -> None:
         await asyncio.gather(*streams, return_exceptions=True)
 
 
-def main() -> None:
-    asyncio.run(_run())
-
-
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
