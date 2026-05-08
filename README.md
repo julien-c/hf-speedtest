@@ -69,6 +69,15 @@ Knobs are at the top of `src/hf_speedtest/cli.py`:
 | `MAX_SECONDS`       | 20.0    | `time_dl_max`                 |
 | `OVERHEAD`          | 1.06    | `overheadCompensationFactor`  |
 
+## Alternative
+
+For a quick single-stream measurement without installing anything:
+
+```bash
+curl -o /dev/null -s -w "%{speed_download}\n" https://aws.cdn.hf.co/fast/5gb \
+  | awk '{printf "%.2f Gbit/s\n", $1*8/1e9}'
+```
+
 ## License
 
 LGPL-3.0 — see [LibreSpeed's license](https://github.com/librespeed/speedtest/blob/master/LICENSE)
