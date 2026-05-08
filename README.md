@@ -2,6 +2,8 @@
 
 A Python `hf` CLI extension that measures your download bandwidth to HF and its CDN.
 
+![hf-speedtest](assets/hf-speedtest.png)
+
 ## Install
 
 Install via the [`hf` CLI extension system](https://huggingface.co/docs/huggingface_hub/guides/cli-extensions):
