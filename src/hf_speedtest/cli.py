@@ -90,8 +90,9 @@ async def ticker(state: State) -> None:
 
 
 async def main() -> None:
-    server_location = await get_server_location(URL)
-    print(f"server location: {server_location}")
+    pop_id, server_location = await get_server_location(URL)
+    label = f"{pop_id} ({server_location})" if pop_id else server_location
+    print(f"\033[90mserver location: {label}\033[0m")
 
     state = State()
     limits = httpx.Limits(max_connections=NUM_STREAMS * 2, max_keepalive_connections=NUM_STREAMS)

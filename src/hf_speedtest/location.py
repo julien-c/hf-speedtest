@@ -112,20 +112,25 @@ def resolve_hf_cdn_pop(pop_id: str) -> str:
     return pop_id
 
 
-async def get_server_location(url: str) -> str:
-    """Resolve which CDN PoP `url` is being served from. Returns "Unknown" on miss."""
+async def get_server_location(url: str) -> tuple[str, str]:
+    """Resolve which CDN PoP `url` is being served from.
+
+    Returns a (raw_header_value, resolved_label) tuple. When neither
+    x-hf-cdn-pop nor x-amz-cf-pop is present, returns ("", "Unknown").
+    """
     async with httpx.AsyncClient(follow_redirects=True) as client:
         response = await client.head(url)
 
     hf_pop = response.headers.get("x-hf-cdn-pop")
     if hf_pop is not None:
-        return resolve_hf_cdn_pop(hf_pop)
+        return hf_pop, resolve_hf_cdn_pop(hf_pop)
 
     cf_pop = response.headers.get("x-amz-cf-pop")
     if cf_pop is not None:
         iata = cf_pop.upper()[:3]
         if iata in MAJOR_AIRPORT_IATAS:
             city, country = MAJOR_AIRPORT_IATAS[iata]
-            return f"{city}, {country}"
+            return cf_pop, f"{city}, {country}"
+        return cf_pop, "Unknown"
 
-    return "Unknown"
+    return "", "Unknown"
