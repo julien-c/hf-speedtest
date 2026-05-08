@@ -108,5 +108,10 @@ async def main() -> None:
         await asyncio.gather(*streams, return_exceptions=True)
 
 
-if __name__ == "__main__":
+def cli() -> None:
+    """Sync entry point for the console_scripts hook in pyproject.toml."""
     asyncio.run(main())
+
+
+if __name__ == "__main__":
+    cli()

@@ -12,4 +12,4 @@ dependencies = [
 ]
 
 [project.scripts]
-hf-speedtest = "hf_speedtest.cli:main"
+hf-speedtest = "hf_speedtest.cli:cli"
